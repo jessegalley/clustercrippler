@@ -26,6 +26,12 @@ type Config struct {
     yes bool             // skip confirmation for apply command
 }
 
+// version information
+const (
+    version = "v0.1.0"
+		author  = "jesse galley <jesse.galley@hostpapa.com>"
+)
+
 const warningBanner = `
 ▗▖ ▗▖ ▗▄▖ ▗▄▄▖ ▗▖  ▗▖▗▄▄▄▖▗▖  ▗▖ ▗▄▄▖
 ▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▛▚▖▐▌  █  ▐▛▚▖▐▌▐▌   
@@ -40,7 +46,7 @@ func main() {
     // Get remaining non-flag arguments
     args := pflag.Args()
     if len(args) < 1 {
-        fmt.Println("Usage: clustercrippler [apply|remove|ping] [latency]")
+        fmt.Println("Usage: cat hosts.txt | ./clustercrippler [apply|remove|ping] [latency]")
         os.Exit(1)
     }
 
@@ -73,22 +79,50 @@ func main() {
 func parseFlags() Config {
     var config Config
     var interfaceList string
+    var showVersion bool
 
-    // Define flags with references to variables
+    // define flags with references to variables
     pflag.StringVarP(&interfaceList, "interfaces", "I", "", "Comma-separated list of interfaces")
     pflag.StringVarP(&config.identityFile, "identity", "i", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "SSH identity file")
     pflag.IntVarP(&config.parallel, "parallel", "p", 10, "Number of parallel workers")
     pflag.BoolVarP(&config.yes, "yes", "y", false, "Skip confirmation prompt and proceed with apply")
+    pflag.BoolVarP(&showVersion, "version", "V", false, "Show version information")
     
     pflag.Parse()
 
-    // Split interface list if provided
+    // handle version flag first
+    if showVersion {
+        fmt.Printf("clustercrippler version %s\n", version)
+				fmt.Printf("%s\n", author)
+        os.Exit(0)
+    }
+
+    // split interface list if provided
     if interfaceList != "" {
         config.interfaces = strings.Split(interfaceList, ",")
     }
 
     return config
 }
+// func parseFlags() Config {
+//     var config Config
+//     var interfaceList string
+//
+//     // Define flags with references to variables
+//     pflag.StringVarP(&interfaceList, "interfaces", "I", "", "Comma-separated list of interfaces")
+//     pflag.StringVarP(&config.identityFile, "identity", "i", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "SSH identity file")
+//     pflag.IntVarP(&config.parallel, "parallel", "p", 10, "Number of parallel workers")
+//     pflag.BoolVarP(&config.yes, "yes", "y", false, "Skip confirmation prompt and proceed with apply")
+//     
+//     pflag.Parse()
+//
+//     // Split interface list if provided
+//     if interfaceList != "" {
+//         config.interfaces = strings.Split(interfaceList, ",")
+//     }
+//
+//     return config
+// }
 
 // readHosts reads hostnames from stdin, one per line.
 // typically used with a pipe, e.g., `cat hosts.txt | clustercrippler`.
